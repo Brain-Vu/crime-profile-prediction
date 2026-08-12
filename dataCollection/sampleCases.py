@@ -35,7 +35,7 @@ print(sample_DF)
 # ----------------------------
 
 for case in sample_DF.itertuples(index=True):
-  id = case.case_id
+  id = case.opinion_id
   index = case.Index
 
   response = requests.get(
@@ -51,6 +51,8 @@ for case in sample_DF.itertuples(index=True):
   opinion_data = response.json()
   sample_DF.loc[index, "plain_text"] = opinion_data["plain_text"]
 
+  sample_DF.to_csv("samples.csv", index=False)
+  print(f"Saved plain text for case {id}")
   time.sleep(3.4)
 
 # ----------------------------
@@ -58,4 +60,4 @@ for case in sample_DF.itertuples(index=True):
 # ----------------------------
 
 sample_DF.to_csv("samples.csv", index=False)
-print(f"\nSaved {SAMPLE_SIZE} randomly selected cases.")
+print(f"\nSaved {SAMPLE_SIZE} selected cases.")
