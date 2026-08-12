@@ -13,7 +13,6 @@ BASE_URL = "https://www.courtlistener.com/api/rest/v4/search/"
 # CONFIGURATION
 # ----------------------------
 
-# change as needed to resume progress after a crash
 COUNTER_START = int(input("What is the starting index? "))
 START_URL = input("What is the starting URL? Enter \'BASE\' to use BASE_URL ")
 
