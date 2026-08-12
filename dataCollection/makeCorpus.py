@@ -88,7 +88,7 @@ while url:
     # periodically saving progress
     if len(cases) % 100 < 20:
         pd.DataFrame(cases).to_csv(
-            "courtlistener_sample.csv",
+            "cases.csv",
             index=False
         )
 
@@ -100,6 +100,6 @@ while url:
 
 # final save
 df = pd.DataFrame(cases)
-df.to_csv("courtlistener_sample.csv", index=False)
+df.to_csv("cases.csv", index=False)
 
 print(f"\nTotal cases downloaded: {len(cases)}")
