@@ -7,15 +7,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 API_TOKEN = os.getenv("COURT_LISTENER_API_KEY")
+BASE_URL = "https://www.courtlistener.com/api/rest/v4/search/"
 
 # ----------------------------
 # CONFIGURATION
 # ----------------------------
 
-RANDOM_SEED = 67
-
-BASE_URL = "https://www.courtlistener.com/api/rest/v4/search/"
-
+# change as needed to resume progress after a crash
+COUNTER_START = 1
+START_URL = BASE_URL
 
 headers = {
     "Authorization": f"Token {API_TOKEN}"
@@ -26,8 +26,8 @@ headers = {
 # ----------------------------
 
 cases = []
-counter = 1
-url = BASE_URL
+counter = COUNTER_START
+url = START_URL
 params = {
     "q": 'dateFiled:[2025-08-10 TO 2026-08-09]',
     "type": "o"
@@ -43,8 +43,15 @@ while url:
         headers=headers
     )
 
+    # error handling
     if response.status_code != 200:
         print("Error:", response.status_code)
+
+        if response.status_code in [429, 500, 502, 503, 504]:
+            print("Retrying in 30 seconds...")
+            time.sleep(30)
+            continue
+
         print(response.text)
         break
 
