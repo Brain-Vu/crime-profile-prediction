@@ -14,8 +14,8 @@ BASE_URL = "https://www.courtlistener.com/api/rest/v4/search/"
 # ----------------------------
 
 # change as needed to resume progress after a crash
-COUNTER_START = 1
-START_URL = BASE_URL
+COUNTER_START = int(input("What is the starting index? "))
+START_URL = input("What is the starting URL? Enter \'BASE\' to use BASE_URL ")
 
 headers = {
     "Authorization": f"Token {API_TOKEN}"
@@ -27,11 +27,17 @@ headers = {
 
 cases = []
 counter = COUNTER_START
-url = START_URL
-params = {
-    "q": 'dateFiled:[2025-08-10 TO 2026-08-09]',
-    "type": "o"
-}
+
+if START_URL == "BASE":
+    url = BASE_URL
+
+    params = {
+        "q": "dateFiled:[2025-08-10 TO 2026-08-09]",
+        "type": "o",
+    }
+else:
+    url = START_URL
+    params = None
 
 print("Downloading cases...")
 
