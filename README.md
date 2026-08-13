@@ -1,15 +1,38 @@
 # crime-profile-prediction
 
-## To set up the proper dependencies, run:
+## General methodology:
+1. An account was created for Court Listener, which provides an API service to access court opinions. A token was generated on the website to access the API.
+  - Court Listener is a free legal website that hosts millions of legal opinions from federal and state courts.
 
-### Good practice to set up a virtual environment, although syntax here may slightly differ depending on machine
+2. A separate account was created on the Free Law Project website. They offer a free membership for academics to access increased API call rates, which we redeemed.
+  - The Free Law Project is a US federal 501 nonprofit that provides free tooling and access to legal research material.
+  - They operate and maintain Court Listener.
 
+3. The script 'retrieveCases.py' was created to call the Court Listener API using their 'search' url, and download all recorded cases present between August 10, 2025 and August 9th, 2026—an arbitrary time frame that is a year in length. 
+  - A description of each case is represented by a court opinion.
+  - A court opinion is a formal written document by a judicial body that explains the legal reasoning behind a court's decision in a lawsuit, including a description of the facts of the case and a summary of what happened between those involved.
+  - Multiple opinions may exist for a single case. As only a single detailed description of the case was required for our purposes, only the first opinion was included if multiple opinions were present.
+  - This initial API call for the court cases included a unique, identifying opinion ID, but did not include the actual plain text content of the court opinion. Thus, an additional API call was needed.
+
+4. Our project required around 165 different cases, which is a tiny subset of the tens of thousands of total cases that the API call for our date range returned. Thus, the script 'sampleCases.py' was created to randomly sample cases. Subsequently, for the selected cases, the script called the Court Listener API using their 'opinions' url, and downloaded the raw plain text content of the court opinion for each case.   
+  - During this step, light data cleansing was completed, including removing escape characters like '\n' and marking opinions whose plain text fields were empty. 
+  - Rather than 165 cases, 600 were selected as many opinions were found to be lacking in detail. Further data processing will be completed in later stages to reduce this to 165.
+
+## To run this yourself:
+
+### Setup a virtual environment and install required libraries (syntax works for Linux type OS)
 python -m venv .venv <br>
 source .venv/Scripts/activate <br>
 pip install -r requirements.txt <br>
 
-### Reference code to setup a tmux to conveniently run code on a remote machine without having to keep a window open
+### Running the code
+1. Generate an API key on Court Listener and save it to a .env file.
+2. Run 'python retrieveCases.py'
+  - On your initial run, enter '1' as the starting index and 'BASE' as the base URL.
+  - The code saves a .csv as it runs. In the event of a crash, simply open the .csv file, scroll to the latest element, noting its case_id and next_url. When re-running the code, type in case_id + 1 as the starting index and next_url as the base URL.  
+3. Run 'python sampleCases.py' 
+
+## Side note for team: reference code to setup a tmux to conveniently run code on a remote machine without having to keep a window open
 tmux new -s courtlistener <br>
 ctrl+b and then d to exit <br>
 tmux attach -t courtlistener <br>
-
