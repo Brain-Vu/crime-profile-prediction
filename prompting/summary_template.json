@@ -1,0 +1,20 @@
+{
+  "crime-script": {
+    "preparation": [],
+    "approach": [],
+    "entry-or-access": [],
+    "actions-during-crime": [],
+    "interaction-with-victim": [],
+    "acquisition-or-theft": [],
+    "escape-or-departure": [],
+    "post-crime-actions": []
+  },
+
+  "suspect-information": {
+    "age": "0-18y | 19-24y | 25-29y | 30-39y | 40-49y | 50+y | null",
+    "sex": "Male | Female | null",
+    "economic-status": "Lower | Middle | Upper | null",
+    "educational-level": "High school | Bachelor’s | Above Bachelor’s | null",
+    "general-description": []
+  }
+}

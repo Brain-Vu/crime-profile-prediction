@@ -1,12 +1,12 @@
 You are extracting factual information from a court opinion. The court opinion is provided in `opinion.txt`.
 
-Your task is to extract factual information about the crime and its execution in the form of a crime script, as well as explicitly stated characteristics of the suspect.
+Your task is to extract factual information about the crime and its execution in the form of a crime script, as well as explicitly stated characteristics of the primary suspect.
 
 Do not infer, speculate, estimate, or add information that is not explicitly supported by `opinion.txt`.
 
 ### Suspect Information
 
-Extract the following characteristics of the suspect when they are explicitly stated in the opinion and place them in the `suspect-information` field:
+Extract the following characteristics of the primary suspect of the case when they are explicitly stated in the opinion and place them in the `suspect-information` field:
 
 - Age:
   - `0-18y`
@@ -30,14 +30,14 @@ Extract the following characteristics of the suspect when they are explicitly st
   - Middle: $41,392 ≤ income ≤ $124,176
   - Upper: income > $124,176
 
-- Educational Level:
+- Education Level:
   - `High school`
   - `Bachelor’s`
   - `Above Bachelor’s`
 
 Use only the categories specified above. Do not infer any characteristic from indirect information.
 
-For age, use an explicitly stated age or date of birth when available. If a date of birth is provided, use it only to determine the appropriate age category; do not include the date of birth anywhere in `case-information` or `crime-script`.
+For age, use an explicitly stated age or date of birth when available. If a date of birth is provided, use it only to determine the appropriate age category; do not include the date of birth anywhere in the `crime-script` field.
 
 For economic status, classify the suspect only when sufficient explicit income information is provided to determine the appropriate category. Do not infer economic status from occupation, residence, clothing, possessions, or other indirect characteristics.
 
@@ -47,9 +47,9 @@ If a characteristic cannot be determined from information explicitly stated in t
 
 ### Information Separation
 
-The `case-information` and `crime-script` fields represent the factual information that will be provided to a separate AI for suspect-profile prediction.
+The `crime-script` field represents the factual information that will be provided to a separate AI for suspect-profile prediction.
 
-Therefore, **DO NOT include the suspect's age, sex, economic status, or educational level anywhere in `case-information` or `crime-script`**, even if these characteristics are explicitly stated in the opinion.
+Therefore, **DO NOT include the suspect's age, sex, economic status, or educational level anywhere in `crime-script`**, even if these characteristics are explicitly stated in the opinion.
 
 These four characteristics must appear **only** in `suspect-information`.
 
@@ -63,7 +63,7 @@ Do not indirectly reveal these characteristics through information such as:
 - Graduation information
 - Any other information that directly reveals or allows the four characteristics to be determined
 
-The purpose of this separation is to ensure that `case-information` and `crime-script` contain only information available to the separate AI when it predicts the suspect profile.
+The purpose of this separation is to ensure that `crime-script` contains only information available to the separate AI when it predicts the suspect profile.
 
 ### General Extraction Rules
 
@@ -75,11 +75,12 @@ The purpose of this separation is to ensure that `case-information` and `crime-s
 6. Do not include information about the suspect's personality, intelligence, character, or psychological characteristics unless explicitly requested by the template.
 7. Do not include irrelevant procedural history or legal arguments unless they contain factual information directly relevant to the crime.
 8. Distinguish between established facts and allegations. Do not present an allegation as an established fact unless the opinion establishes it as fact.
-9. Information about victims, witnesses, accomplices, or other individuals may be included in `case-information` or `crime-script` when it is factually relevant to understanding the crime.
-10. Do not fill missing information using general knowledge or assumptions.
-11. When multiple suspects are discussed, identify the primary defendant/suspect to whom the extracted `suspect-information` applies. Do not combine characteristics from different individuals.
-12. Return **valid JSON only**. Do not include explanations, commentary, or Markdown outside the JSON object.
+9. Information about victims, witnesses, accomplices, or other individuals may be included in `crime-script` when it is factually relevant to understanding the crime.
+10. **Anonymize all individuals mentioned in the output. Do not include real names, initials, aliases, usernames, or other personally identifying names. Refer to individuals using generic labels such as `the defendant`, `the victim`, `the witness`, `the accomplice`, or `Person 1` when a generic label is insufficient to distinguish between individuals.**
+11. Do not fill missing information using general knowledge or assumptions.
+12. When multiple suspects are discussed, identify the primary defendant/suspect to whom the extracted `suspect-information` applies. Do not combine characteristics from different individuals.
+13. Return **valid JSON only**. Do not include explanations, commentary, or Markdown outside the JSON object.
 
 ### Output Format
 
-Use the following JSON template exactly:
+Your output should be a single JSON file named `case_summary.json`, exactly following the format of `summary_template.json`.
