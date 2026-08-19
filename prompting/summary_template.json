@@ -1,13 +1,47 @@
 {
   "crime-script": {
-    "preparation": [],
-    "approach": [],
-    "entry-or-access": [],
-    "actions-during-crime": [],
-    "interaction-with-victim": [],
-    "acquisition-or-theft": [],
-    "escape-or-departure": [],
-    "post-crime-actions": []
+    "phase-1-(preparation)": {
+      "planning-actions": [],
+      "resources-obtained": [{
+        "object":"",
+        "purpose":""
+      }],
+      "information-gathering":[],
+      "additional-preparation": []
+    },
+    "phase-2-(target-and-access)": {
+      "targeting-behavior":[],
+      "access-method": [],
+      "entry-or-access": []
+    },
+    "phase-3-(crime-execution)": {
+      "event-sequence": [{
+        "step":1,
+        "action":"",
+        "method":"",
+        "object_used":"",
+        "location":""
+      }],
+      "interaction-with-victim": [],
+      "acquisition-or-theft": [],
+      "criminal-actions":[],
+    },
+    "phase-4-(completion-and-exit)": {
+      "escape-or-departure": [],
+      "goal-completion":[],
+      "evidence-disposal-actions":[]
+    },
+    "phase-5-(post-event-behavior)": {
+      "post-crime-actions": [],
+      "concealment-behavior":[],
+      "investigation-related-events":[],
+      "time-conditions":[],
+      "security-conditions":[],
+      "situational-opportunities":[]
+    },
+    "facts-extracted": [{
+      "fact":""
+    }]
   },
 
   "suspect-information": {
