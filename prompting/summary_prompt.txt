@@ -1,8 +1,8 @@
-You are extracting factual information from a court opinion. The court opinion is provided in `opinion.txt`.
+You are extracting factual information from a court opinion. The court opinion is provided in `opinion.pdf`.
 
 Your task is to extract factual information about the crime and its execution in the form of a crime script, as well as explicitly stated characteristics of the primary suspect.
 
-Do not infer, speculate, estimate, or add information that is not explicitly supported by `opinion.txt`.
+Do not infer, speculate, estimate, or add information that is not explicitly supported by `opinion.pdf`.
 
 ### Suspect Information
 
