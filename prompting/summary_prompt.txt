@@ -57,6 +57,7 @@ Do not indirectly reveal these characteristics through information such as:
 
 - Date of birth
 - Exact age
+- Gender or sex
 - Income or salary
 - Educational institution
 - Degree information
