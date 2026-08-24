@@ -67,5 +67,5 @@ for case in sample_DF.itertuples(index=True):
 # SAVE FILES
 # ----------------------------
 
-sample_DF.to_csv("samples.csv", index=False)
+sample_DF.to_csv("sampled_cases.csv", index=False)
 print(f"\nSaved {SAMPLE_SIZE} selected cases.")

@@ -105,6 +105,6 @@ while url:
 
 # final save
 df = pd.DataFrame(cases)
-df.to_csv("cases.csv", index=False)
+df.to_csv("all_cases.csv", index=False)
 
 print(f"\nTotal cases downloaded: {len(cases)}")
