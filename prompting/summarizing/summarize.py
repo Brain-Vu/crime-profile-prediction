@@ -41,7 +41,7 @@ schema = {
 def process_case(case_text):
     response = client.messages.create(
         model="claude-sonnet-5",
-        max_tokens=300,
+        max_tokens=500,
 
         thinking={
             "type": "adaptive",
@@ -84,12 +84,13 @@ def process_case_with_retry(case_text):
     for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
             return process_case(case_text)
-        except Exception:
+        except Exception as e:
             if attempt == MAX_ATTEMPTS:
                 raise
 
             delay = 2 ** attempt
             print(f"Attempt {attempt}/{MAX_ATTEMPTS} failed; retrying in {delay} seconds")
+            print(f"Error is: {e}")
             time.sleep(delay)
 
 
@@ -136,4 +137,4 @@ output = pd.concat(
     axis=1
 )
 
-output.to_csv("processed_cases.csv", index=False)
+output.to_csv("summarized_cases.csv", index=False)
