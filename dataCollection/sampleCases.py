@@ -13,8 +13,10 @@ BASE_URL = "https://www.courtlistener.com/api/rest/v4/opinions"
 # CONFIGURATION
 # ----------------------------
 
+OUTPUT_FILE = "sampled_cases.csv"
+MAX_RETRIES = 5
 RANDOM_SEED = 67
-SAMPLE_SIZE = 600
+SAMPLE_SIZE = 600 + 300
 
 file = input("Please input the name of the csv: ")
 cases_DF = pd.read_csv(f"./data/{file}")
@@ -27,13 +29,43 @@ headers = {
 # RANDOM SAMPLE
 # ----------------------------
 
-sample_DF = cases_DF.sample(n=SAMPLE_SIZE, random_state=RANDOM_SEED)
+random_sample = cases_DF.sample(
+    n=SAMPLE_SIZE,
+    random_state=RANDOM_SEED
+)
+
+if os.path.exists(OUTPUT_FILE):
+    existing = pd.read_csv(OUTPUT_FILE)
+
+    needed = SAMPLE_SIZE - len(existing)
+
+    if needed > 0:
+        missing_cases = random_sample[
+            ~random_sample["opinion_id"].isin(existing["opinion_id"])
+        ].head(needed)
+
+        sample_DF = pd.concat(
+            [existing, missing_cases],
+            ignore_index=True
+        )
+
+        print(f"Added {len(missing_cases)} new cases.")
+
+    else:
+        sample_DF = existing
+
+else:
+    sample_DF = random_sample
 
 # ----------------------------
 # GETTING PLAIN TEXT DESCRIPTIONS
 # ----------------------------
 
 for case in sample_DF.itertuples(index=True):
+
+  if pd.notna(case.quality):
+    continue
+  
   id = case.opinion_id
   index = case.Index
 
@@ -42,9 +74,32 @@ for case in sample_DF.itertuples(index=True):
     headers=headers
   )
 
-  # error handling
-  if response.status_code != 200:
-      print("Error:", response.status_code)
+  # Retry the API request
+  for attempt in range(MAX_RETRIES):
+
+      try:
+          response = requests.get(
+              f"{BASE_URL}/{id}",
+              headers=headers,
+              timeout=30
+          )
+
+          if response.status_code == 200:
+              break
+
+          print(
+              f"Case {id}: attempt {attempt + 1}/{MAX_RETRIES} "
+              f"failed with {response.status_code}"
+          )
+
+          time.sleep(10)
+
+      except requests.RequestException as e:
+          print(f"Case {id}: {e}")
+          time.sleep(10)
+
+  else:
+      print(f"Giving up on case {id} after {MAX_RETRIES} attempts.")
       break
 
   opinion_data = response.json()
@@ -59,7 +114,7 @@ for case in sample_DF.itertuples(index=True):
     sample_DF.loc[index, "quality"] = "empty"
 
   sample_DF.loc[index, "plain_text"] = plain_text
-  sample_DF.to_csv("samples.csv", index=False)
+  sample_DF.to_csv(OUTPUT_FILE, index=False)
   print(f"Saved plain text for case {id}")
   time.sleep(3.4)
 
@@ -67,5 +122,5 @@ for case in sample_DF.itertuples(index=True):
 # SAVE FILES
 # ----------------------------
 
-sample_DF.to_csv("sampled_cases.csv", index=False)
+sample_DF.to_csv(OUTPUT_FILE, index=False)
 print(f"\nSaved {SAMPLE_SIZE} selected cases.")
