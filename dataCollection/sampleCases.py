@@ -16,7 +16,7 @@ BASE_URL = "https://www.courtlistener.com/api/rest/v4/opinions"
 OUTPUT_FILE = "sampled_cases.csv"
 MAX_RETRIES = 5
 RANDOM_SEED = 67
-SAMPLE_SIZE = 600 + 300
+SAMPLE_SIZE = 600 + 500
 
 file = input("Please input the name of the csv: ")
 cases_DF = pd.read_csv(f"./data/{file}")
@@ -34,7 +34,9 @@ random_sample = cases_DF.sample(
     random_state=RANDOM_SEED
 )
 
-if os.path.exists(OUTPUT_FILE):
+resuming = os.path.exists(OUTPUT_FILE)
+
+if resuming:
     existing = pd.read_csv(OUTPUT_FILE)
 
     needed = SAMPLE_SIZE - len(existing)
@@ -63,7 +65,7 @@ else:
 
 for case in sample_DF.itertuples(index=True):
 
-  if pd.notna(case.quality):
+  if resuming and pd.notna(case.quality):
     continue
   
   id = case.opinion_id
