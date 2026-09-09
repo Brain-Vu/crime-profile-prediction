@@ -16,7 +16,7 @@ BASE_URL = "https://www.courtlistener.com/api/rest/v4/opinions"
 OUTPUT_FILE = "sampled_cases.csv"
 MAX_RETRIES = 5
 RANDOM_SEED = 67
-SAMPLE_SIZE = 600 + 500
+SAMPLE_SIZE = 600 + 900
 
 file = input("Please input the name of the csv: ")
 cases_DF = pd.read_csv(f"./data/{file}")
