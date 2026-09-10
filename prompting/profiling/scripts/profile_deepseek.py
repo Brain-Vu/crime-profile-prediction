@@ -4,6 +4,7 @@ import pandas as pd
 
 from openai import OpenAI
 from dotenv import load_dotenv
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 load_dotenv()
 
@@ -21,9 +22,12 @@ client = OpenAI(
 # =========================
 
 PROMPT = "profiling_prompt.txt"
-CSV_FILE = "test.csv"
+CSV_FILE = "summaries.csv"
 TEXT_COLUMN = "summary"
 OUTPUT_FILE = "deepseek.csv"
+
+# Number of simultaneous API requests
+MAX_WORKERS = 10
 
 # =========================
 # LOAD PROMPT
@@ -99,6 +103,43 @@ SCHEMA = {
 
 
 # =========================
+# PROCESS ONE CASE
+# =========================
+
+def process_case(i, text):
+    """
+    Process a single case.
+    Returns:
+        (index, result, error)
+    """
+
+    try:
+        response = client.responses.create(
+            model="deepseek-v4-flash",
+            input=f"""
+{prompt}
+
+Crime summary:
+{text}
+""",
+            text={
+                "format": {
+                    "type": "json_schema",
+                    "name": "suspect_profile",
+                    "schema": SCHEMA
+                }
+            }
+        )
+
+        result = json.loads(response.output_text)
+
+        return i, json.dumps(result), None
+
+    except Exception as e:
+        return i, None, str(e)
+
+
+# =========================
 # RUN DEEPSEEK
 # =========================
 
@@ -112,7 +153,6 @@ def run_deepseek(csv_file, text_column, output_file):
         df = pd.read_csv(output_file)
         print(f"Resuming from existing file: {output_file}")
 
-        # Make sure output column exists
         if "deepseek_profile" not in df.columns:
             df["deepseek_profile"] = None
 
@@ -123,65 +163,70 @@ def run_deepseek(csv_file, text_column, output_file):
     total = len(df)
 
     # -------------------------
-    # Process cases
+    # Find unfinished cases
     # -------------------------
 
+    pending = []
+
     for i in range(total):
+        if pd.isna(df.at[i, "deepseek_profile"]):
+            pending.append(i)
 
-        # Skip already completed cases
-        if pd.notna(df.at[i, "deepseek_profile"]):
-            continue
+    print(f"\nTotal cases: {total}")
+    print(f"Already completed: {total - len(pending)}")
+    print(f"Remaining: {len(pending)}")
+    print(f"Concurrent workers: {MAX_WORKERS}\n")
 
-        print(f"\nProcessing {i + 1}/{total}")
+    if not pending:
+        print("All cases already completed!")
+        return
 
-        text = df.at[i, text_column]
+    # -------------------------
+    # Process concurrently
+    # -------------------------
 
-        try:
+    completed_since_save = 0
 
-            response = client.responses.create(
-                model="deepseek-v4-flash",
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
 
-                input=f"""
-                    {prompt}
+        futures = {
+            executor.submit(
+                process_case,
+                i,
+                df.at[i, text_column]
+            ): i
+            for i in pending
+        }
 
-                    Crime summary:
-                    {text}
-                    """,
+        for future in as_completed(futures):
 
-                text={
-                    "format": {
-                        "type": "json_schema",
-                        "name": "suspect_profile",
-                        "schema": SCHEMA
-                    }
-                }
-            )
+            i, result, error = future.result()
+
+            if error:
+                print(f"✗ Case {i + 1} failed: {error}")
+
+            else:
+                df.at[i, "deepseek_profile"] = result
+                print(
+                    f"✓ Case {i + 1}/{total} completed"
+                )
+
+            completed_since_save += 1
 
             # -------------------------
-            # Get model output
+            # Save every 10 completed
             # -------------------------
 
-            result = json.loads(response.output_text)
+            if completed_since_save >= 10:
+                df.to_csv(output_file, index=False)
+                print("  → Progress saved")
+                completed_since_save = 0
 
-            # -------------------------
-            # Save result
-            # -------------------------
+    # -------------------------
+    # Final save
+    # -------------------------
 
-            df.at[i, "deepseek_profile"] = json.dumps(result)
-
-            # Save immediately
-            df.to_csv(output_file, index=False)
-
-            print(f"✓ Saved case {i + 1}/{total}")
-
-        except Exception as e:
-
-            print(f"✗ Case {i + 1} failed: {e}")
-
-            # Save progress even after failure
-            df.to_csv(output_file, index=False)
-
-            print("Progress saved. Moving to next case.")
+    df.to_csv(output_file, index=False)
 
     print("\nFinished!")
     print(f"Results saved to: {output_file}")

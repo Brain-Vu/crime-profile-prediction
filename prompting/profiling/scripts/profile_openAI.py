@@ -13,7 +13,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # =========================
 
 PROMPT = "profiling_prompt.txt"
-CSV_FILE = "test.csv"
+CSV_FILE = "summaries.csv"
 TEXT_COLUMN = "summary"
 OUTPUT_FILE = "openai.csv"
 

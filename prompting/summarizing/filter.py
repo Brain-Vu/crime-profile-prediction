@@ -1,6 +1,6 @@
 import pandas as pd
 
-cases = pd.read_csv("./summarized_cases.csv")
+cases = pd.read_csv("./addition3_summarized.csv")
 
 # cases[cases["summary"].notna()].to_csv("filtered.csv")
 cases[cases["summary"].notna()][["case_id", "summary"]].to_csv("simplified.csv")

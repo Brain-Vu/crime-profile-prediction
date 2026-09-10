@@ -20,11 +20,10 @@ client = Anthropic(
 # =========================
 
 PROMPT = "profiling_prompt.txt"
-CSV_FILE = "test.csv"
+CSV_FILE = "summaries.csv"
 TEXT_COLUMN = "summary"
 OUTPUT_FILE = "claude.csv"
-
-MODEL = "claude-sonnet-5"
+MODEL = "claude-opus-4-6"
 
 # =========================
 # LOAD PROMPT
@@ -54,7 +53,6 @@ SCHEMA = {
                         "50+y"
                     ]
                 },
-
                 "sex": {
                     "type": "string",
                     "enum": [
@@ -62,7 +60,6 @@ SCHEMA = {
                         "Female"
                     ]
                 },
-
                 "economic-status": {
                     "type": "string",
                     "enum": [
@@ -71,7 +68,6 @@ SCHEMA = {
                         "Upper"
                     ]
                 },
-
                 "educational-level": {
                     "type": "string",
                     "enum": [
@@ -80,7 +76,6 @@ SCHEMA = {
                         "Above Bachelor's"
                     ]
                 },
-
                 "reasoning": {
                     "type": "string",
                     "description": (
@@ -90,7 +85,6 @@ SCHEMA = {
                     )
                 }
             },
-
             "required": [
                 "age",
                 "sex",
@@ -98,15 +92,12 @@ SCHEMA = {
                 "educational-level",
                 "reasoning"
             ],
-
             "additionalProperties": False
         }
     },
-
     "required": [
         "suspect-information"
     ],
-
     "additionalProperties": False
 }
 
@@ -116,24 +107,47 @@ SCHEMA = {
 
 def run_claude(csv_file, text_column, output_file):
 
-    # Resume if output already exists
+    # =========================
+    # LOAD / RESUME
+    # =========================
+
     if os.path.exists(output_file):
+
         df = pd.read_csv(output_file)
+
         print(f"Resuming from existing file: {output_file}")
 
+        # If column doesn't exist, create it as object/string
         if "claude_profile" not in df.columns:
-            df["claude_profile"] = ""
+            df["claude_profile"] = pd.Series(
+                "", index=df.index, dtype="object"
+            )
+
+        # If column already exists, force it to object
+        else:
+            df["claude_profile"] = df["claude_profile"].astype("object")
 
     else:
+
         df = pd.read_csv(csv_file)
-        df["claude_profile"] = ""
+
+        # Create output column as object/string
+        df["claude_profile"] = pd.Series(
+            "", index=df.index, dtype="object"
+        )
 
     total = len(df)
+
+    # =========================
+    # PROCESS CASES
+    # =========================
 
     for i in range(total):
 
         # Skip already processed rows
-        if pd.notna(df.at[i, "claude_profile"]) and df.at[i, "claude_profile"] != "":
+        value = df.at[i, "claude_profile"]
+
+        if pd.notna(value) and str(value).strip() not in ("", "nan"):
             continue
 
         print(f"\nProcessing {i + 1}/{total}")
@@ -142,12 +156,14 @@ def run_claude(csv_file, text_column, output_file):
 
         try:
 
+            # =========================
+            # CALL CLAUDE
+            # =========================
+
             response = client.messages.create(
                 model=MODEL,
                 max_tokens=2000,
-
                 system=prompt,
-
                 messages=[
                     {
                         "role": "user",
@@ -158,7 +174,6 @@ Crime summary:
 """
                     }
                 ],
-
                 output_config={
                     "format": {
                         "type": "json_schema",
@@ -167,21 +182,36 @@ Crime summary:
                 }
             )
 
-            # Extract Claude's text response
+            # =========================
+            # EXTRACT RESPONSE
+            # =========================
+
             result_text = ""
 
             for block in response.content:
                 if block.type == "text":
                     result_text += block.text
 
-            # Parse JSON
+            # =========================
+            # PARSE JSON
+            # =========================
+
             result = json.loads(result_text)
 
-            # Save result
+            # =========================
+            # SAVE RESULT
+            # =========================
+
             df.at[i, "claude_profile"] = json.dumps(result)
 
-            # Save progress immediately
-            df.to_csv(output_file, index=False)
+            # =========================
+            # SAVE PROGRESS
+            # =========================
+
+            df.to_csv(
+                output_file,
+                index=False
+            )
 
             print(f"✓ Saved case {i + 1}/{total}")
 
@@ -190,9 +220,16 @@ Crime summary:
             print(f"✗ Case {i + 1} failed: {e}")
 
             # Save progress even if request fails
-            df.to_csv(output_file, index=False)
+            df.to_csv(
+                output_file,
+                index=False
+            )
 
             print("Progress saved. Moving to next case.")
+
+    # =========================
+    # FINISHED
+    # =========================
 
     print("\nFinished!")
     print(f"Results saved to: {output_file}")
